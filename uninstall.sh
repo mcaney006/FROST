@@ -8,7 +8,11 @@ say(){ printf '\033[36m[frost]\033[0m %s\n' "$1"; }
 [ -f "$MANIFEST" ] || { echo "no manifest at $MANIFEST — nothing to uninstall"; exit 0; }
 while IFS= read -r p; do
   [ -n "$p" ] || continue
-  if [ -e "$p" ] || [ -L "$p" ]; then say "removing $p"; rm -rf "$p"; fi
+  case "$p" in
+    "$HOME/Applications/FROST.app"|"$HOME/.local/bin/frost"|"$APP_SUPPORT/bin/frost"|"$APP_SUPPORT/bin/frost_mojo_helper")
+      if [ -e "$p" ] || [ -L "$p" ]; then say "removing $p"; rm -rf "$p"; fi ;;
+    *) say "ignoring unrecognized manifest path: $p" ;;
+  esac
 done < "$MANIFEST"
 rm -f "$MANIFEST"
 if [ "${1:-}" = "--purge" ]; then
