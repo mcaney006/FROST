@@ -1,0 +1,108 @@
+{
+  "machine": {
+    "chip": "Apple M5",
+    "memory_gib": 16,
+    "os": "macOS 27.2",
+    "arch": "arm64"
+  },
+  "toolchains": {
+    "rust": "1.98.1",
+    "zig": "0.16.0",
+    "mojo": "1.1.0.dev2026082005",
+    "mlx": "0.32.1",
+    "mlx_c": "0.6.0_4"
+  },
+  "tests_passed": 24,
+  "tests_failed": 0,
+  "model": {
+    "backbone": "nomic-embed-text-v1.5",
+    "revision": "e9b6763023c676ca8431644204f50c2b100d9aab",
+    "hidden": 768,
+    "layers": 12,
+    "heads": 12,
+    "rope_base": 1000,
+    "weights_bytes": 546938168
+  },
+  "boundaries": {
+    "mlx_gpu": "PASS",
+    "zig_c_abi": "PASS",
+    "mojo_ipc_kernel": "PASS",
+    "mlx_scalar_parity": "PASS"
+  },
+  "rank_example": {
+    "kind": "ranked",
+    "ranking": [
+      {
+        "id": "play",
+        "raw_score": 0.67361903,
+        "calibrated": null
+      },
+      {
+        "id": "brightness",
+        "raw_score": 0.54883254,
+        "calibrated": null
+      },
+      {
+        "id": "delete",
+        "raw_score": 0.49990982,
+        "calibrated": null
+      }
+    ],
+    "pick": "play",
+    "trace": {
+      "exit": "full",
+      "width": 768,
+      "retrieved": 3,
+      "reranked": 3,
+      "device": "gpu",
+      "cache_hit": false,
+      "stage_ms": [
+        [
+          "encode",
+          36.910125
+        ],
+        [
+          "score",
+          0.728667
+        ]
+      ],
+      "model_fingerprint": "nomic-embed-text-v1.5@e9b6763023c676ca8431644204f50c2b100d9aab:h768:l12:heads12:rope1000",
+      "head_fingerprint": null,
+      "thermal": "Nominal",
+      "notes": [
+        "scorer=mojo-ipc"
+      ]
+    }
+  },
+  "training": {
+    "loss_start": 2.153061,
+    "loss_final": 0.0062829,
+    "baseline_top1": 0.9375,
+    "head_top1": 0.9375,
+    "reload_matches": true,
+    "n_train": 16,
+    "n_eval": 16,
+    "family_split": true
+  },
+  "python_audit": {
+    "runtime_libpython_links": 0,
+    "python_crates": 0,
+    "python_in_scripts": 0,
+    "verdict": "no runtime Python dependency"
+  },
+  "network_audit": {
+    "http_client_crates": 0,
+    "verdict": "offline by design"
+  },
+  "install": {
+    "app": "/Users/michael.jr/Applications/FROST.app",
+    "cli": "/Users/michael.jr/.local/bin/frost",
+    "data": "/Users/michael.jr/Library/Application Support/FROST"
+  },
+  "gui": {
+    "render": "PASS (screenshot verified)",
+    "backend_selftest": "PASS",
+    "automated_click": "NOT TESTED (assistive access not granted)"
+  },
+  "isolated_uninstall_reinstall": "PASS"
+}
