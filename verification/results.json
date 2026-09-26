@@ -95,9 +95,9 @@
     "verdict": "offline by design"
   },
   "install": {
-    "app": "/Users/michael.jr/Applications/FROST.app",
-    "cli": "/Users/michael.jr/.local/bin/frost",
-    "data": "/Users/michael.jr/Library/Application Support/FROST"
+    "app": "<HOME>/Applications/FROST.app",
+    "cli": "<HOME>/.local/bin/frost",
+    "data": "<HOME>/Library/Application Support/FROST"
   },
   "gui": {
     "render": "PASS (screenshot verified)",
