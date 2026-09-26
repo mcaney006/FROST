@@ -122,7 +122,13 @@ impl MojoKernel {
                 req.push_str(&fmt_f32(*x));
             }
         }
-        parse_floats(&self.request(&req)?)
+        let scores = parse_floats(&self.request(&req)?)?;
+        if scores.len() != cands.len() {
+            return Err(KernelError::BadResponse(format!(
+                "expected {} scores, got {}", cands.len(), scores.len()
+            )));
+        }
+        Ok(scores)
     }
 
     /// Approximate resident-set overhead of the helper (KiB), for the record.
