@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FROST</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --line:#262d38; --fg:#e6edf3; --muted:#8b949e;
+    --accent:#5aa9ff; --good:#3fb950; --warn:#d29922; --bad:#f85149; --chip:#1f2733;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+  header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.14em;font-weight:600}
+  header .fp{color:var(--muted);font-size:11px;margin-left:auto;font-variant-numeric:tabular-nums;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  nav{display:flex;gap:2px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+  nav button{background:transparent;border:0;color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:13px}
+  nav button.active{background:var(--chip);color:var(--fg)}
+  main{padding:18px;max-width:920px;margin:0 auto}
+  .view{display:none} .view.active{display:block}
+  label{display:block;color:var(--muted);font-size:12px;margin:14px 0 6px}
+  textarea,input,select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
+  textarea{min-height:64px;resize:vertical}
+  .actions .row{display:flex;gap:8px;margin-bottom:8px}
+  .actions .row input.id{flex:0 0 150px}
+  .btn{background:var(--accent);color:#04122b;border:0;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer}
+  .btn.ghost{background:var(--chip);color:var(--fg)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .bar{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .pick{margin-top:16px;padding:12px 14px;border-radius:9px;border:1px solid var(--line);background:var(--panel)}
+  .pick.ok{border-color:#1f6feb55} .pick.abstain{border-color:#d2992255} .pick.defer{border-color:#f8514955}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  th{color:var(--muted);font-weight:500;font-size:12px}
+  .score{position:relative}
+  .score .fill{position:absolute;left:0;top:0;bottom:0;background:#5aa9ff22;border-radius:4px}
+  .score span{position:relative}
+  .kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin-top:10px}
+  .kv div:nth-child(odd){color:var(--muted)}
+  code{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px}
+  .muted{color:var(--muted)} .empty{color:var(--muted);padding:24px 0;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>FROST</h1>
+  <div class="fp" id="fp">loading…</div>
+</header>
+<nav>
+  <button data-view="workbench" class="active">Workbench</button>
+  <button data-view="trace">Trace</button>
+  <button data-view="settings">Settings</button>
+</nav>
+<main>
+  <section class="view active" id="workbench">
+    <label>State</label>
+    <textarea id="state" placeholder="Describe the current state…">the user wants to listen to music</textarea>
+    <label>Candidate actions</label>
+    <div class="actions" id="actions"></div>
+    <div class="bar">
+      <button class="btn ghost sm" id="add">+ action</button>
+      <button class="btn" id="rank">Rank</button>
+      <span class="muted" id="status"></span>
+    </div>
+    <div id="result"></div>
+  </section>
+
+  <section class="view" id="trace">
+    <div id="traceBody" class="empty">Run a ranking to see its execution trace.</div>
+  </section>
+
+  <section class="view" id="settings">
+    <label>Mode</label>
+    <select id="mode"><option>quiet</option><option>balanced</option><option>performance</option></select>
+    <label>Simulate thermal state (does not heat hardware; scheduling policy only)</label>
+    <select id="thermal"><option value="">off (read OS)</option><option>nominal</option><option>fair</option><option>serious</option><option>critical</option></select>
+    <div class="kv" id="info"></div>
+    <div class="bar"><button class="btn ghost" id="quit">Quit &amp; release resources</button></div>
+  </section>
+</main>
+<script>
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+let nextReq=1;
+const pending=new Map();
+function call(cmd,payload){return new Promise(res=>{const req=nextReq++;pending.set(req,res);window.ipc.postMessage(JSON.stringify({req,cmd,...payload}));});}
+window.__frost_resp=(req,obj)=>{const r=pending.get(req);if(r){pending.delete(req);r(obj);}};
+
+// tabs
+$$('nav button').forEach(b=>b.onclick=()=>{
+  $$('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  $$('.view').forEach(v=>v.classList.remove('active'));$('#'+b.dataset.view).classList.add('active');
+});
+
+// action rows
+function addAction(id="",text=""){
+  const row=document.createElement('div');row.className='row';
+  row.innerHTML=`<input class="id" placeholder="id" value="${id}"><input class="text" placeholder="action description" value="${text}"><button class="btn ghost sm rm">✕</button>`;
+  row.querySelector('.rm').onclick=()=>row.remove();
+  $('#actions').appendChild(row);
+}
+["play|start playing a song from the library","delete|permanently erase all backup files","brightness|increase the screen brightness"]
+  .forEach(s=>{const [i,t]=s.split('|');addAction(i,t);});
+$('#add').onclick=()=>addAction();
+
+function esc(s){return (s+'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+let lastTrace=null;
+$('#rank').onclick=async()=>{
+  const state=$('#state').value.trim();
+  const actions=[...$$('#actions .row')].map(r=>({id:r.querySelector('.id').value.trim(),text:r.querySelector('.text').value.trim()})).filter(a=>a.text);
+  if(!state||!actions.length){$('#status').textContent='need a state and at least one action';return;}
+  $('#status').textContent='ranking…';
+  const d=await call('rank',{state,actions,mode:$('#mode').value,thermal:$('#thermal').value});
+  $('#status').textContent='';
+  render(d);
+};
+
+function render(d){
+  const el=$('#result');
+  if(d.error){el.innerHTML=`<div class="pick defer">error: ${esc(d.error)}</div>`;return;}
+  lastTrace=d.trace;renderTrace();
+  if(d.kind==='deferred'){el.innerHTML=`<div class="pick defer"><b>Deferred</b> — ${esc(d.reason)}</div>`;return;}
+  const max=Math.max(...d.ranking.map(r=>r.raw_score),1e-6);
+  const rows=d.ranking.map((r,i)=>{
+    const w=Math.max(0,Math.min(100,r.raw_score/max*100));
+    return `<tr><td>${i+1}</td><td>${esc(r.id)}</td><td class="score"><div class="fill" style="width:${w}%"></div><span>${r.raw_score.toFixed(4)}</span></td></tr>`;
+  }).join('');
+  const pick=d.pick?`<div class="pick ok"><b>Pick:</b> ${esc(d.pick)}</div>`:`<div class="pick abstain"><b>Abstained</b> — top candidates too close under the calibrated margin.</div>`;
+  el.innerHTML=pick+`<table><thead><tr><th>#</th><th>action</th><th>score</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderTrace(){
+  if(!lastTrace){return;}
+  const t=lastTrace;
+  const stages=(t.stage_ms||[]).map(s=>`<code>${esc(s[0])} ${s[1].toFixed(1)}ms</code>`).join(' ');
+  $('#traceBody').classList.remove('empty');
+  $('#traceBody').innerHTML=`<div class="kv">
+    <div>exit</div><div>${esc(t.exit||'-')}</div>
+    <div>width</div><div>${t.width||'-'}</div>
+    <div>device</div><div>${esc(t.device)}</div>
+    <div>cache hit</div><div>${t.cache_hit}</div>
+    <div>thermal</div><div>${esc(t.thermal||'-')}</div>
+    <div>retrieved / reranked</div><div>${t.retrieved} / ${t.reranked}</div>
+    <div>stages</div><div>${stages||'-'}</div>
+    <div>model</div><div><code>${esc(t.model_fingerprint)}</code></div>
+    <div>notes</div><div>${(t.notes||[]).map(esc).join('<br>')||'-'}</div>
+  </div>`;
+}
+
+$('#quit').onclick=()=>call('shutdown',{});
+
+(async()=>{
+  const info=await call('info',{});
+  $('#fp').textContent=info.fingerprint||'';
+  $('#info').innerHTML=`<div>backbone</div><div>nomic-embed-text-v1.5</div>
+    <div>revision</div><div><code>${esc(info.revision||'')}</code></div>
+    <div>scorer</div><div>${esc(info.scorer||'')}</div>
+    <div>device</div><div>${esc(info.device||'gpu')}</div>
+    <div>fingerprint</div><div><code>${esc(info.fingerprint||'')}</code></div>`;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+[package]
+name = "frost-model"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+frost-core = { path = "../frost-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+memmap2 = "0.9"
+half = "2"
