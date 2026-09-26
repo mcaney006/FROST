@@ -50,15 +50,25 @@ impl Engine {
 
     /// Cache key: model fp + mode + the ordered eligible (id|text|permission) set.
     fn cache_key(&self, req: &Request) -> u64 {
-        let mut s = format!("{}|{:?}|", self.embedder.fingerprint(), req.mode);
-        let mut items: Vec<String> = req
-            .eligible()
-            .iter()
-            .map(|c| format!("{}\u{1}{}\u{1}{}", c.id, c.text, c.permission.clone().unwrap_or_default()))
-            .collect();
+        let mut s = String::new();
+        let fp = self.embedder.fingerprint();
+        s.push_str(&format!("{}:", fp.len()));
+        s.push_str(fp);
+        let mode = format!("{:?}", req.mode);
+        s.push_str(&format!("{}:", mode.len()));
+        s.push_str(&mode);
+        s.push_str(&format!("{}:", req.state.len()));
+        s.push_str(&req.state);
+        let mut items: Vec<(String, String, String)> = req.eligible().iter().map(|c| (
+            c.id.clone(), c.text.clone(), c.permission.clone().unwrap_or_default()
+        )).collect();
         items.sort();
-        s.push_str(&format!("state={}|", req.state));
-        for it in items { s.push_str(&it); s.push('\u{2}'); }
+        for (id, text, permission) in items {
+            for field in [&id, &text, &permission] {
+                s.push_str(&format!("{}:", field.len()));
+                s.push_str(field);
+            }
+        }
         fnv1a64(s.as_bytes())
     }
 
