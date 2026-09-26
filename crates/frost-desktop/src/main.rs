@@ -30,6 +30,16 @@ struct Act { #[serde(default)] id: String, #[serde(default)] text: String }
 
 enum UserEvent { Ipc(String) }
 
+#[derive(Deserialize)]
+struct IpcEnvelope {
+    #[serde(default)] cmd: String,
+    #[serde(default)] req: Option<u64>,
+}
+
+fn ipc_envelope(raw: &str) -> Option<IpcEnvelope> {
+    serde_json::from_str(raw).ok()
+}
+
 fn parse_mode(s: &str) -> Mode {
     match s { "balanced" => Mode::Balanced, "performance" => Mode::Performance, _ => Mode::Quiet }
 }
@@ -124,9 +134,14 @@ fn main() -> wry::Result<()> {
         match event {
             Event::NewEvents(StartCause::Init) => {}
             Event::UserEvent(UserEvent::Ipc(body)) => {
-                if body.contains("\"shutdown\"") { *control_flow = ControlFlow::Exit; return; }
+                let envelope = ipc_envelope(&body);
+                if matches!(envelope.as_ref().map(|msg| msg.cmd.as_str()), Some("shutdown")) { *control_flow = ControlFlow::Exit; return; }
+                let req = envelope.and_then(|msg| msg.req);
                 let resp = handle(&eng, &body);
-                let js = format!("window.__frost_resp({resp})");
+                let js = match req {
+                    Some(req) => format!("window.__frost_resp({req},{resp})"),
+                    None => format!("window.__frost_resp(null,{resp})"),
+                };
                 let _ = wv.evaluate_script(&js);
             }
             Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => *control_flow = ControlFlow::Exit,

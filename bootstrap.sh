@@ -23,7 +23,15 @@ for t in cargo zig mojo clang; do command -v "$t" >/dev/null || die "missing too
 
 say "2/8 building Mojo kernel helper"
 mkdir -p "$BIN_DIR"
-mojo build "$HELPER_SRC" -o "$BIN_DIR/frost_mojo_helper" 2>&1 | grep -vi crashpad || true
+MOJO_LOG="${TMPDIR:-/tmp}/frost-mojo-build.$$.log"
+if mojo build "$HELPER_SRC" -o "$BIN_DIR/frost_mojo_helper" >"$MOJO_LOG" 2>&1; then
+  grep -vi crashpad "$MOJO_LOG" || true
+else
+  grep -vi crashpad "$MOJO_LOG" >&2 || true
+  rm -f "$MOJO_LOG"
+  die "mojo helper build failed"
+fi
+rm -f "$MOJO_LOG"
 [ -x "$BIN_DIR/frost_mojo_helper" ] || die "mojo helper build failed"
 
 say "3/8 building release binaries (Rust + Zig via cargo)"

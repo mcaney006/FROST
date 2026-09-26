@@ -81,9 +81,10 @@
 </main>
 <script>
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-let pending=null;
-function call(cmd,payload){return new Promise(res=>{pending=res;window.ipc.postMessage(JSON.stringify({cmd,...payload}));});}
-window.__frost_resp=obj=>{if(pending){const r=pending;pending=null;r(obj);}};
+let nextReq=1;
+const pending=new Map();
+function call(cmd,payload){return new Promise(res=>{const req=nextReq++;pending.set(req,res);window.ipc.postMessage(JSON.stringify({req,cmd,...payload}));});}
+window.__frost_resp=(req,obj)=>{const r=pending.get(req);if(r){pending.delete(req);r(obj);}};
 
 // tabs
 $$('nav button').forEach(b=>b.onclick=()=>{

@@ -149,8 +149,9 @@ impl Arr {
     /// Rotary position embedding (NeoX/non-interleaved when traditional=false).
     pub fn rope(&self, dims: i32, traditional: bool, base: f32, s: &Stream) -> Arr {
         let mut r = Self::empty();
+        let freqs = Arr(Self::empty());
         let b = mlx_optional_float { value: base, has_value: true };
-        ck(unsafe { mlx_fast_rope(&mut r, self.0, dims, traditional, b, 1.0, 0, Self::empty(), s.0) }, "rope");
+        ck(unsafe { mlx_fast_rope(&mut r, self.0, dims, traditional, b, 1.0, 0, freqs.0, s.0) }, "rope");
         Arr(r)
     }
 }
