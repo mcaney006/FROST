@@ -33,9 +33,12 @@ first=1
 printf '%s\n' "$FILES" | while read -r name bytes sha; do
   [ -n "$name" ] || continue
   final="$DEST/$name"; part="$final.part"
-  if [ -f "$final" ] && [ "$(size_of "$final")" = "$bytes" ] && [ -f "$final.sha256" ]; then
-    got=$(cat "$final.sha256")
-    if [ "$sha" = "-" ] || [ "$got" = "$sha" ]; then say "ok      $name"; else say "REVERIFY $name"; rm -f "$final.sha256"; fi
+  if [ -f "$final" ] && [ "$(size_of "$final")" = "$bytes" ]; then
+    got=$(sha_of "$final")
+    if [ "$sha" = "-" ] || [ "$got" = "$sha" ]; then
+      printf '%s\n' "$got" > "$final.sha256"; say "ok      $name"; continue
+    fi
+    say "REVERIFY $name"; rm -f "$final" "$final.sha256"
   fi
   if [ ! -f "$final.sha256" ]; then
     say "fetch   $name ($bytes bytes)"
