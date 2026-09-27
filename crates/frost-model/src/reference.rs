@@ -2,7 +2,7 @@
 //! encoder. Used to parity-check the MLX path and to isolate architecture vs
 //! composition bugs. Slow and simple on purpose — no MLX, no FFI.
 
-use crate::model::SafeTensors;
+use frost_tensors::SafeTensors;
 use std::path::Path;
 
 pub struct Ref {

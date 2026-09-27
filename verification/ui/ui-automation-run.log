@@ -1,0 +1,8 @@
+[frost-ui] {"type":"status","status":{"state":"ready"}}
+[frost-ui] {"type":"messages_changed","conv_id":"18d916828b4cc6b84f58105e52e089e6"}
+[frost-ui] {"type":"conversations_changed"}
+[frost-ui] {"type":"message_started","conv_id":"18d916828b4cc6b84f58105e52e089e6","message_id":"18d91761c232ceb8b6602fbe2dcb0c30"}
+[frost-ui] {"type":"message_done","conv_id":"18d916828b4cc6b84f58105e52e089e6","message_id":"18d91761c232ceb8b6602fbe2dcb0c30","content":"```rust\nfn reverse_string(s: &str) -> String {\n    s.chars().rev().collect()\n}\n```\n\nThis function takes a string slice, reverses its characters using `chars().rev()`, and collects them into a new `String`. The `rev()` method returns an iterator over the characters in reverse order.","meta":{"context_truncated_messages":0,"control_ids_seen":0,"decode_ms":2827.333917,"finish":"eos","generator":{"backend":"mlx-gpu (mlx-c)","quantization":"4-bit affine, group size 64","repo":"mlx-community/Ministral-3-8B-Instruct-2512-4bit","revision":"182f003f01daa75f9de0f2c4d379722fd0bc1c61"},"kv_cache_bytes":35651584,"mlx_peak_bytes":5045576068,"mode":"performance","new_tokens":66,"prefill_ms":1230.2029160000002,"prompt_tokens":133,"reused_prefix_tokens":0,"sampler":"mojo-dylib","status":"done","tokens_per_second":23.343546230305417,"tool_calls":[],"tools_available":false,"wall_ms":4061.8923330000002}}
+[frost-ui] {"type":"conversations_changed"}
+exit=143
+(delta events elided from this log: 60 lines)

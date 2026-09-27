@@ -1,0 +1,6 @@
+{
+  "build": ["cargo", "build", "--offline", "--tests"],
+  "test": ["cargo", "test", "--offline", "--test", "held_out"],
+  "held_out": ["tests/held_out.rs"],
+  "pass_criteria": "exit 0"
+}

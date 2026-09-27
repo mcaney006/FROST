@@ -1,0 +1,23 @@
+[package]
+name = "frost-chat"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+# Test-only: lets tests inject a simulated thermal state. Never enabled in release builds.
+thermal-sim = []
+
+[dependencies]
+frost-core = { path = "../frost-core" }
+frost-gen = { path = "../frost-gen" }
+frost-store = { path = "../frost-store" }
+frost-platform = { path = "../frost-platform" }
+frost-mlx = { path = "../frost-mlx" }
+frost-kernels = { path = "../frost-kernels" }
+frost-tools = { path = "../frost-tools" }
+frost-repo = { path = "../frost-repo" }
+frost-model = { path = "../frost-model" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }

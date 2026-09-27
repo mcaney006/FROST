@@ -1,151 +1,82 @@
-//! FROST desktop shell: a system-webview window (wry) whose backend is the SAME
-//! frost-service::Engine used by the CLI. Inference, policy and persistence stay
-//! in Rust; the webview is a thin front end that talks over wry IPC.
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+//! FROST desktop: Rust owns the engine lifecycle; the window is native AppKit (native/app/*.m)
+//! talking to the engine over the C ABI in native/app/frost_app.h.
+use frost_chat::ffi::{self, FrostEngine};
+use std::ffi::{c_char, c_int, CStr, CString};
+use std::time::{Duration, Instant};
 
-use frost_core::{Candidate, Decision, Mode, Request, ThermalState};
-use frost_model::Embedder;
-use frost_service::Engine;
-use serde::Deserialize;
-use std::rc::Rc;
-use tao::{
-    event::{Event, StartCause, WindowEvent},
-    event_loop::{ControlFlow, EventLoopBuilder},
-    window::WindowBuilder,
-};
-use wry::WebViewBuilder;
-
-const UI: &str = include_str!("../ui/index.html");
-
-#[derive(Deserialize)]
-struct Msg {
-    cmd: String,
-    #[serde(default)] state: String,
-    #[serde(default)] actions: Vec<Act>,
-    #[serde(default)] mode: String,
-    #[serde(default)] thermal: String,
-}
-#[derive(Deserialize)]
-struct Act { #[serde(default)] id: String, #[serde(default)] text: String }
-
-enum UserEvent { Ipc(String) }
-
-#[derive(Deserialize)]
-struct IpcEnvelope {
-    #[serde(default)] cmd: String,
-    #[serde(default)] req: Option<u64>,
+#[allow(improper_ctypes)] // FrostEngine is only ever handled through an opaque pointer
+extern "C" {
+    fn frost_ui_run(engine: *mut FrostEngine, argc: c_int, argv: *const *const c_char) -> c_int;
 }
 
-fn ipc_envelope(raw: &str) -> Option<IpcEnvelope> {
-    serde_json::from_str(raw).ok()
-}
-
-fn parse_mode(s: &str) -> Mode {
-    match s { "balanced" => Mode::Balanced, "performance" => Mode::Performance, _ => Mode::Quiet }
-}
-fn parse_thermal(s: &str) -> Option<ThermalState> {
-    match s {
-        "nominal" => Some(ThermalState::Nominal),
-        "fair" => Some(ThermalState::Fair),
-        "serious" => Some(ThermalState::Serious),
-        "critical" => Some(ThermalState::Critical),
-        _ => None,
+/// Copy a Rust-owned ABI string out and release it.
+fn take(p: *mut c_char) -> String {
+    if p.is_null() {
+        return String::new();
     }
+    let s = unsafe { CStr::from_ptr(p) }.to_string_lossy().into_owned();
+    ffi::frost_string_free(p);
+    s
 }
 
-fn handle(engine: &Engine, raw: &str) -> String {
-    let msg: Msg = match serde_json::from_str(raw) {
-        Ok(m) => m,
-        Err(e) => return format!(r#"{{"error":"bad request: {e}"}}"#),
+/// `--headless-check`: load the engine, wait for it to leave `loading` (≤120 s), print status +
+/// model identity, exit 0 when ready / 3 on error. No UI.
+fn headless_check() -> i32 {
+    let e = ffi::frost_engine_new(std::ptr::null());
+    let started = Instant::now();
+    let code = loop {
+        let status = take(ffi::frost_engine_status_json(e));
+        let state = serde_json::from_str::<serde_json::Value>(&status)
+            .ok()
+            .and_then(|v| v["state"].as_str().map(str::to_owned))
+            .unwrap_or_default();
+        if state != "loading" || started.elapsed() > Duration::from_secs(120) {
+            println!("{status}");
+            println!("{}", take(ffi::frost_model_info_json(e)));
+            break if state == "ready" { 0 } else { 3 };
+        }
+        std::thread::sleep(Duration::from_millis(200));
     };
-    match msg.cmd.as_str() {
-        "info" => serde_json::json!({
-            "fingerprint": engine.fingerprint(),
-            "revision": frost_model::REVISION,
-            "scorer": engine.scorer(),
-            "device": "gpu",
-        }).to_string(),
-        "rank" => {
-            engine.set_thermal_override(parse_thermal(&msg.thermal));
-            let candidates: Vec<Candidate> = msg.actions.into_iter().enumerate()
-                .filter(|(_, a)| !a.text.trim().is_empty())
-                .map(|(i, a)| Candidate {
-                    id: if a.id.trim().is_empty() { format!("a{i}") } else { a.id },
-                    text: a.text, permission: None,
-                }).collect();
-            let req = Request { state: msg.state, candidates, mode: parse_mode(&msg.mode), allowed: None };
-            let d: Decision = engine.rank(&req);
-            serde_json::to_string(&d).unwrap_or_else(|e| format!(r#"{{"error":"{e}"}}"#))
-        }
-        "shutdown" => r#"{"bye":true}"#.to_string(),
-        other => format!(r#"{{"error":"unknown cmd {other}"}}"#),
-    }
+    ffi::frost_engine_free(e);
+    code
 }
 
-fn main() -> wry::Result<()> {
-    // Headless backend self-test: exercises the SAME handle()+Engine path the
-    // webview uses, without opening a window. `frost-desktop --selftest`.
-    if std::env::args().any(|a| a == "--selftest") {
-        let dir = Embedder::default_dir();
-        let engine = Engine::load(&dir).expect("engine load");
-        let info = handle(&engine, r#"{"cmd":"info"}"#);
-        println!("info => {info}");
-        let rank = handle(&engine, r#"{"cmd":"rank","state":"play some music","mode":"quiet","actions":[{"id":"play","text":"play a song"},{"id":"delete","text":"erase all files"}]}"#);
-        println!("rank => {rank}");
-        assert!(rank.contains("\"kind\":\"ranked\"") && rank.contains("play"), "selftest rank failed");
-        println!("SELFTEST OK");
-        return Ok(());
+fn main() {
+    // The Objective-C objects resolve these by name at link time; referencing them here keeps
+    // the linker from dead-stripping the exported ABI out of the frost-chat rlib.
+    let keep: [*const (); 20] = [
+        ffi::frost_attempts_json as *const (),
+        ffi::frost_attempt_decide as *const (),
+        ffi::frost_engine_new as *const (),
+        ffi::frost_engine_free as *const (),
+        ffi::frost_engine_set_event_callback as *const (),
+        ffi::frost_engine_status_json as *const (),
+        ffi::frost_model_info_json as *const (),
+        ffi::frost_conversations_json as *const (),
+        ffi::frost_conversation_create as *const (),
+        ffi::frost_conversation_delete as *const (),
+        ffi::frost_conversation_rename as *const (),
+        ffi::frost_messages_json as *const (),
+        ffi::frost_send as *const (),
+        ffi::frost_regenerate as *const (),
+        ffi::frost_clear_context as *const (),
+        ffi::frost_cancel as *const (),
+        ffi::frost_set_mode as *const (),
+        ffi::frost_set_repo as *const (),
+        ffi::frost_last_error as *const (),
+        ffi::frost_string_free as *const (),
+    ];
+    std::hint::black_box(keep);
+
+    let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--headless-check") {
+        std::process::exit(headless_check());
     }
-    let dir = Embedder::default_dir();
-    let engine = match Engine::load(&dir) {
-        Ok(e) => Rc::new(e),
-        Err(e) => {
-            // Show a helpful page instead of crashing when weights are missing.
-            let html = format!("<h2 style='font-family:sans-serif'>FROST</h2><p style='font-family:sans-serif'>Model not loaded: {e}.<br>Run <code>bootstrap.sh</code> to download the weights, then relaunch.</p>");
-            let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
-            let window = WindowBuilder::new().with_title("FROST").build(&event_loop).unwrap();
-            let _wv = WebViewBuilder::new().with_html(html).build(&window)?;
-            event_loop.run(move |ev, _, cf| {
-                *cf = ControlFlow::Wait;
-                if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = ev { *cf = ControlFlow::Exit; }
-            });
-        }
-    };
 
-    let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
-    let proxy = event_loop.create_proxy();
-    let window = WindowBuilder::new()
-        .with_title("FROST")
-        .with_inner_size(tao::dpi::LogicalSize::new(960.0, 720.0))
-        .build(&event_loop)
-        .unwrap();
-
-    let webview = Rc::new(
-        WebViewBuilder::new()
-            .with_html(UI)
-            .with_ipc_handler(move |req| { let _ = proxy.send_event(UserEvent::Ipc(req.into_body())); })
-            .build(&window)?,
-    );
-
-    let wv = webview.clone();
-    let eng = engine.clone();
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Wait;
-        match event {
-            Event::NewEvents(StartCause::Init) => {}
-            Event::UserEvent(UserEvent::Ipc(body)) => {
-                let envelope = ipc_envelope(&body);
-                if matches!(envelope.as_ref().map(|msg| msg.cmd.as_str()), Some("shutdown")) { *control_flow = ControlFlow::Exit; return; }
-                let req = envelope.and_then(|msg| msg.req);
-                let resp = handle(&eng, &body);
-                let js = match req {
-                    Some(req) => format!("window.__frost_resp({req},{resp})"),
-                    None => format!("window.__frost_resp(null,{resp})"),
-                };
-                let _ = wv.evaluate_script(&js);
-            }
-            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => *control_flow = ControlFlow::Exit,
-            _ => {}
-        }
-    });
+    let engine = ffi::frost_engine_new(std::ptr::null());
+    let cargs: Vec<CString> = args.iter().map(|a| CString::new(a.as_str()).unwrap_or_default()).collect();
+    let argv: Vec<*const c_char> = cargs.iter().map(|c| c.as_ptr()).collect();
+    let code = unsafe { frost_ui_run(engine, argv.len() as c_int, argv.as_ptr()) };
+    ffi::frost_engine_free(engine);
+    std::process::exit(code);
 }

@@ -3,12 +3,19 @@ resolver = "2"
 members = [
   "crates/frost-core",
   "crates/frost-index",
-  "crates/frost-service",
   "crates/frost-model",
   "crates/frost-train",
   "crates/frost-cli",
   "crates/frost-platform",
   "crates/frost-desktop",
+  "crates/frost-mlx",
+  "crates/frost-tensors",
+  "crates/frost-gen",
+  "crates/frost-store",
+  "crates/frost-kernels",
+  "crates/frost-chat",
+  "crates/frost-tools",
+  "crates/frost-repo",
 ]
 
 [workspace.package]

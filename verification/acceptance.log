@@ -1,0 +1,393 @@
+FROST acceptance — 2026-09-27T14:28:05Z
+machine: Mac17,2 Apple M5, 16 GiB, macOS 27.2
+### unit tests (workspace) (rc=0)
+
+running 8 tests
+ii......
+test result: ok. 6 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.90s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 12 tests
+iii.........
+test result: ok. 9 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 9 tests
+.........
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 4 tests
+ii..
+test result: ok. 2 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+i..........
+test result: ok. 10 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.30s
+
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 22 tests
+......................
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.51s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.46s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+PASS   unit tests (workspace)                    test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### acceptance: generator/encoder/engine/repo (rc=0)
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 34.28s
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 19.93s
+
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 1.35s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 3.15s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+PASS   acceptance: generator/encoder/engine/repo  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### mojo kernels (required, parity) (rc=0)
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+PASS   mojo kernels (required, parity)           test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### zig index + q4 validation (rc=0)
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+PASS   zig index + q4 validation                 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### tools/runner/patch/fixtures (rc=0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 22 tests
+......................
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.29s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+PASS   tools/runner/patch/fixtures               test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### python audit (rc=0)
+PASS cargo dependency graph             no pyo3/cpython/python crates (normal + build deps)
+PASS scripts/build.rs invocations       no python/pip/uv/conda/pixi commands in scripts or build.rs
+PASS mojo compiler binary               native Mach-O, links no libpython
+PASS runtime linkage                    no libpython in CLI, app, or bundled dylibs
+PASS bundled rpaths                     no rpath into site-packages / venv
+PYTHON AUDIT: PASS
+PASS   python audit                             PASS bundled rpaths                     no rpath into site-packages / venv PYTHON AUDIT: PASS
+### offline audit (no network crates; 0 sockets during generation) (rc=0)
+PASS network crates                 no reqwest/hyper/ureq/curl/hf-hub/tls crates in runtime deps
+PASS generation offline             0 internet sockets during a real generation (17.2 tok/s)
+OFFLINE AUDIT: PASS
+PASS   offline audit (no network crates; 0 sockets during generation) PASS generation offline             0 internet sockets during a real generation (17.2 tok/s) OFFLINE AUDIT: PASS
+### installed CLI diagnose (rc=0)
+FROST diagnose
+  PASS generator checkpoint         mlx-community/Ministral-3-8B-Instruct-2512-4bit @ 182f003f01da | 4-bit affine, group size 64 | 4.45 GiB text weights
+  PASS generator digests            sha256 markers present for shards + tokenizer
+  PASS tokenizer                    vocab 131072 , control ids 0..1000 verified
+  PASS retrieval encoder            nomic-embed-text-v1.5 @ e9b6763023c6 at /Users/michael.jr/Library/Application Support/FROST/models/nomic-embed-text-v1.5
+  PASS mlx metal                    mlx active 0 MiB
+  PASS zig index (C ABI)            write/open/search ok; meta Meta { dim: 3, count: 3, generation: 1 }
+  PASS mojo sampling kernels        backend mojo-dylib parity vs reference ok
+  PASS platform                     thermal Nominal, pressure Normal, low-power false, physical 16.0 GiB, available 11.2 GiB
+  => all checks PASS
+[
+  {
+    "check": "generator checkpoint",
+    "detail": "mlx-community/Ministral-3-8B-Instruct-2512-4bit @ 182f003f01da | 4-bit affine, group size 64 | 4.45 GiB text weights",
+    "status": "PASS"
+  },
+  {
+    "check": "generator digests",
+    "detail": "sha256 markers present for shards + tokenizer",
+    "status": "PASS"
+  },
+  {
+    "check": "tokenizer",
+    "detail": "vocab 131072 , control ids 0..1000 verified",
+    "status": "PASS"
+  },
+  {
+    "check": "retrieval encoder",
+    "detail": "nomic-embed-text-v1.5 @ e9b6763023c6 at /Users/michael.jr/Library/Application Support/FROST/models/nomic-embed-text-v1.5",
+    "status": "PASS"
+  },
+  {
+    "check": "mlx metal",
+    "detail": "mlx active 0 MiB",
+    "status": "PASS"
+  },
+  {
+    "check": "zig index (C ABI)",
+    "detail": "write/open/search ok; meta Meta { dim: 3, count: 3, generation: 1 }",
+    "status": "PASS"
+  },
+  {
+    "check": "mojo sampling kernels",
+    "detail": "backend mojo-dylib parity vs reference ok",
+    "status": "PASS"
+  },
+  {
+    "check": "platform",
+    "detail": "thermal Nominal, pressure Normal, low-power false, physical 16.0 GiB, available 11.2 GiB",
+    "status": "PASS"
+  }
+]
+PASS   installed CLI diagnose                     } ]
+PASS   installed bundle self-contained          all Mach-O deps via @rpath into Contents/Frameworks
+### installed bundle signature (rc=0)
+
+PASS   installed bundle signature               
+### installed app headless check (rc=0)
+{"available_memory_bytes":7215545022,"context_budget":4096,"generating":false,"idle_unload_seconds":600,"kv_cache_bytes":0,"memory_pressure":"Normal","mlx_active_bytes":4775780608,"mlx_peak_bytes":4775780608,"mode":"quiet","model_loaded":true,"reserved_output_tokens":1024,"state":"ready","thermal":"Nominal"}
+{"generator":{"architecture":"Mistral3ForConditionalGeneration / ministral3 (text-only path; vision tower not loaded)","backend":"mlx-gpu (mlx-c)","context_budget":4096,"heads":32,"hidden":4096,"kv_heads":8,"layers":34,"layout_check":"zig q4_validate: 240 tensors, 0 non-finite scales/biases","model_dir":"/Users/michael.jr/Library/Application Support/FROST/models/Ministral-3-8B-Instruct-2512-4bit","quantization":"4-bit affine, group size 64","repo":"mlx-community/Ministral-3-8B-Instruct-2512-4bit","revision":"182f003f01daa75f9de0f2c4d379722fd0bc1c61","vocab":131072,"weight_bytes":4775780352},"retrieval":{"model":"nomic-ai/nomic-embed-text-v1.5","revision":"e9b6763023c676ca8431644204f50c2b100d9aab","role":"repository search only; never produces chat text"},"sampler_backend":"mojo-dylib"}
+PASS   installed app headless check             {\"available_memory_bytes\":7215545022,\"context_budget\":4096,\"generating\":false,\"idle_unload_seconds\":600,\"kv_cache_bytes\":0,\"memory_pressure\":\"Normal\",\"mlx_active_bytes\":4775780608,\"mlx_peak_bytes\":4775780608,\"mode\":\"quiet\",\"model_loaded\":true,\"reserved_output_tokens\":1024,\"state\":\"ready\",\"thermal\":\"Nominal\"} {\"generator\":{\"architecture\":\"Mistral3ForConditiona
+### installed CLI generation (--load) (rc=0)
+FROST diagnose
+  PASS generator checkpoint         mlx-community/Ministral-3-8B-Instruct-2512-4bit @ 182f003f01da | 4-bit affine, group size 64 | 4.45 GiB text weights
+  PASS generator digests            sha256 markers present for shards + tokenizer
+  PASS tokenizer                    vocab 131072 , control ids 0..1000 verified
+  PASS retrieval encoder            nomic-embed-text-v1.5 @ e9b6763023c6 at /Users/michael.jr/Library/Application Support/FROST/models/nomic-embed-text-v1.5
+  PASS mlx metal                    mlx active 0 MiB
+  PASS zig index (C ABI)            write/open/search ok; meta Meta { dim: 3, count: 3, generation: 1 }
+  PASS mojo sampling kernels        backend mojo-dylib parity vs reference ok
+  PASS platform                     thermal Nominal, pressure Normal, low-power false, physical 16.0 GiB, available 11.0 GiB
+[frost] generator: mlx-community/Ministral-3-8B-Instruct-2512-4bit @ 182f003f01da | 4-bit affine, group size 64 | 34 layers, 8 kv heads | budget 4096 tokens | backend mlx-gpu (mlx-c) | weights 4.45 GiB | loaded in 2.4s
+[frost] prefill 84 tokens in 621 ms
+Ready.
+  PASS generation                   "ready." at 22.7 tok/s, sampler rust-argmax
+  => all checks PASS
+PASS   installed CLI generation (--load)          PASS generation                   \"ready.\" at 22.7 tok/s, sampler rust-argmax   => all checks PASS
+### eval rust-slugify (rc=0)
+[eval] fixture rust-slugify: work dir /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T/frost-eval-rust-slugify-1790519404352256000/repo
+[eval] auto-approving propose_diff (Fix the logic for handling non-alphanumeric characters and ensure separators are only added where needed.)
+[eval] auto-approving run_command (Build the project to check for compilation errors.)
+[eval] auto-approving run_command (Run the held_out tests to verify the fix.)
+[eval] auto-approving propose_diff (Fix the logic to correctly handle non-alphanumeric characters and ensure all characters are included in the slug.)
+[eval] auto-approving run_command (Run the held_out tests to verify the fix.)
+rust-slugify: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 3 | 200s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/rust-slugify.json
+PASS   coding eval plumbing: rust-slugify       rust-slugify: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 3 | 200s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/rust-slugify.json
+FAIL   coding eval quality: rust-slugify        rust-slugify: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 3 | 200s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/rust-slugify.json
+### eval zig-rle (rc=0)
+[eval] fixture zig-rle: work dir /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T/frost-eval-zig-rle-1790519611029446000/repo
+[eval] auto-approving propose_diff (Fixed loop condition and split runs longer than 255 into multiple pairs.)
+[eval] auto-approving run_command (Test the updated RLE encoder implementation.)
+[eval] auto-approving propose_diff (Ensure ternary operator works correctly with `run` comparison.)
+[eval] auto-approving run_command (Re-test the updated RLE encoder implementation.)
+zig-rle: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 2 | 214s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/zig-rle.json
+PASS   coding eval plumbing: zig-rle            zig-rle: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 2 | 214s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/zig-rle.json
+FAIL   coding eval quality: zig-rle             zig-rle: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 2 | 214s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/zig-rle.json
+### eval c-parse-kv (rc=0)
+[eval] fixture c-parse-kv: work dir /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T/frost-eval-c-parse-kv-1790519831970213000/repo
+[eval] auto-approving propose_diff (Reject values longer than 64 characters (KV_VALUE_MAX) to prevent heap-buffer-overflow in kv_parse_line.)
+[eval] auto-approving run_command (Build the project with sanitizer checks enabled.)
+[eval] auto-approving run_command (Run the sanitizer-enabled test to verify the fix.)
+[eval] auto-approving propose_diff (Replace `strncpy` with `memcpy` to ensure safe copying and explicit null-termination, fixing heap-buffer-overflow.)
+[eval] auto-approving run_command (Run the project's test suite to verify the fix for heap-buffer-overflow in `kv_parse_line`.)
+c-parse-kv: plumbing PASS | held-out PASS (after repair) | patches applied 2 | commands 3 | 173s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/c-parse-kv.json
+PASS   coding eval plumbing: c-parse-kv         c-parse-kv: plumbing PASS | held-out PASS (after repair) | patches applied 2 | commands 3 | 173s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/c-parse-kv.json
+PASS   coding eval quality: c-parse-kv          c-parse-kv: plumbing PASS | held-out PASS (after repair) | patches applied 2 | commands 3 | 173s | report /Users/michael.jr/Developer/FROST/verification/coding_eval/c-parse-kv.json
+### isolated install (rc=0)
+[36m[frost][0m 1/9 prerequisites (log: /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST/logs/bootstrap-20260927-094011.log)
+[36m[frost][0m     rust 1.98.1 · zig 0.16.0 · mlx 0.32.1 · mlx-c 0.6.0_4 · clang 21.0.0
+[36m[frost][0m     mojo native compiler: Mojo 1.1.0.dev2026082005 (c72288dd) (Python-free invocation; see verification/mojo_audit.md)
+[36m[frost][0m 2/9 models: skipped (--skip-fetch)
+[36m[frost][0m 3/9 building (cargo, release; Zig via build.rs; Mojo dylib via the native compiler)
+[36m[frost][0m 4/9 tests: skipped (--skip-tests)
+[36m[frost][0m 5/9 staging FROST.app
+[36m[frost][0m 6/9 verifying the staged bundle
+[36m[frost][0m     staged bundle loads bundled MLX; diagnose PASS
+[36m[frost][0m 7/9 installing → /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app
+[36m[frost][0m 8/9 writing manifest
+[36m[frost][0m 9/9 verifying the installed product
+[36m[frost][0m     app headless check: "state":"ready"
+
+[32m[frost] install complete[0m
+  App      : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app            (open "/var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app")
+  CLI      : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/.local/bin/frost  → /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app/Contents/Helpers/frost
+  Data     : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST   (frost.sqlite, models/, logs/, backup/)
+  Manifest : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST/install-manifest.json
+  Uninstall: sh "/Users/michael.jr/Developer/FROST/uninstall.sh" [--purge]
+[36m[frost][0m removing /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app
+[36m[frost][0m removing /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/.local/bin/frost
+[36m[frost][0m kept models, chat database and logs in /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST (use --purge to remove)
+[36m[frost][0m done
+[36m[frost][0m 1/9 prerequisites (log: /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST/logs/bootstrap-20260927-094056.log)
+[36m[frost][0m     rust 1.98.1 · zig 0.16.0 · mlx 0.32.1 · mlx-c 0.6.0_4 · clang 21.0.0
+[36m[frost][0m     mojo native compiler: Mojo 1.1.0.dev2026082005 (c72288dd) (Python-free invocation; see verification/mojo_audit.md)
+[36m[frost][0m 2/9 models: skipped (--skip-fetch)
+[36m[frost][0m 3/9 building (cargo, release; Zig via build.rs; Mojo dylib via the native compiler)
+[36m[frost][0m 4/9 tests: skipped (--skip-tests)
+[36m[frost][0m 5/9 staging FROST.app
+[36m[frost][0m 6/9 verifying the staged bundle
+[36m[frost][0m     staged bundle loads bundled MLX; diagnose PASS
+[36m[frost][0m 7/9 installing → /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app
+[36m[frost][0m 8/9 writing manifest
+[36m[frost][0m 9/9 verifying the installed product
+[36m[frost][0m     app headless check: "state":"ready"
+
+[32m[frost] install complete[0m
+  App      : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app            (open "/var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app")
+  CLI      : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/.local/bin/frost  → /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Applications/FROST.app/Contents/Helpers/frost
+  Data     : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST   (frost.sqlite, models/, logs/, backup/)
+  Manifest : /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC/Library/Application Support/FROST/install-manifest.json
+  Uninstall: sh "/Users/michael.jr/Developer/FROST/uninstall.sh" [--purge]
+PASS   isolated install/uninstall/reinstall     install → uninstall keeps models → reinstall ok (HOME=/var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T//frost-iso.E8XrmC)

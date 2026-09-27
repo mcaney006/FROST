@@ -6,9 +6,9 @@ license.workspace = true
 
 [dependencies]
 frost-core = { path = "../frost-core" }
+frost-mlx = { path = "../frost-mlx" }
+frost-tensors = { path = "../frost-tensors" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
-memmap2 = "0.9"
-half = "2"

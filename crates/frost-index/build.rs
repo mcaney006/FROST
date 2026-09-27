@@ -20,7 +20,7 @@ fn main() {
             "build-lib",
             zig_src.to_str().unwrap(),
             "-O", "ReleaseFast",
-            "-femit-bin",
+            "-lc", // std.c (open/mmap/fsync/rename) + c_allocator for the index handle
         ])
         .arg(format!("-femit-bin={}", lib.display()))
         .status()
