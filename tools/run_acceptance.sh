@@ -79,4 +79,5 @@ rm -rf "$ISO"
 
 printf '{\n  "run_at": "%s",\n  "machine": "%s",\n  "checks": [%s]\n}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(sysctl -n hw.model) $(sysctl -n machdep.cpu.brand_string) macOS $(sw_vers -productVersion)" "${results%,}" > "$RES"
 echo "results: $RES ; log: $LOG"
-n=$(grep -o '"status": "FAIL"' "$RES" | wc -l | tr -d ' '); { [ "$n" = "0" ] && echo "ACCEPTANCE: no FAIL" || echo "ACCEPTANCE: $n FAIL"; }
+n=$(grep -o '"status": "FAIL"' "$RES" | wc -l | tr -d ' ')
+if [ "$n" = "0" ]; then echo "ACCEPTANCE: no FAIL"; else echo "ACCEPTANCE: $n FAIL"; exit 1; fi

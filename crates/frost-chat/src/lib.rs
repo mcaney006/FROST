@@ -222,19 +222,28 @@ impl Engine {
         let text = text.trim();
         if text.is_empty() { return Err(EngineError::Empty); }
         self.ensure_ready()?;
-        {
+        let seq = {
             let mut st = self.0.store.lock().unwrap();
             let conv = st.get_conversation(conv_id)?;
             let first = st.list_messages(conv_id)?.iter().all(|m| m.role != Role::User);
-            st.append_message(conv_id, Role::User, text, json!({}))?;
+            let msg = st.append_message(conv_id, Role::User, text, json!({}))?;
             if first && conv.title == "New chat" {
                 let title: String = text.chars().take(48).collect();
                 st.rename_conversation(conv_id, title.trim())?;
             }
-        }
+            msg.seq
+        };
         self.0.emit(&Event::MessagesChanged { conv_id: conv_id.into() });
         self.0.emit(&Event::ConversationsChanged);
-        self.enqueue(Cmd::Generate { conv_id: conv_id.into() })
+        if let Err(e) = self.enqueue(Cmd::Generate { conv_id: conv_id.into() }) {
+            // Admission failed after the message was already persisted (e.g. a concurrent
+            // send won the one-slot queue): roll it back so a failed send never resurfaces
+            // in a later prompt.
+            let _ = self.0.store.lock().unwrap().truncate_after(conv_id, seq - 1);
+            self.0.emit(&Event::MessagesChanged { conv_id: conv_id.into() });
+            return Err(e);
+        }
+        Ok(())
     }
 
     /// Drop the last assistant reply (and any tool turns after the last user message) and generate again.
@@ -417,6 +426,25 @@ fn single_instance_lock(path: &Path) -> Result<std::fs::File, EngineError> {
     Ok(f)
 }
 
+/// If the OS reports Serious/Critical thermal state or critical memory pressure, records a
+/// deferred assistant turn (no generation attempted) and returns `true`. Called before any
+/// model (re)load so a request never pays for a 4.5 GiB allocation only to be turned away.
+fn defer_admission(inner: &Inner, conv_id: &str, mode: Mode) -> bool {
+    let t_now = inner.thermal();
+    let p_now = frost_platform::memory_pressure();
+    if !(matches!(t_now, ThermalState::Serious | ThermalState::Critical) || p_now == frost_platform::MemoryPressure::Critical) {
+        return false;
+    }
+    let why = if p_now == frost_platform::MemoryPressure::Critical { "critical memory pressure".to_string() } else { format!("thermal state {t_now:?}") };
+    let meta = json!({"status": "done", "finish": if p_now == frost_platform::MemoryPressure::Critical { "memory_pressure_deferred".to_string() } else { format!("thermal_deferred:{t_now:?}") }, "deferred_before_start": true, "mode": mode_name(mode)});
+    if let Ok(m) = inner.store.lock().unwrap().append_message(conv_id, Role::Assistant, "", meta.clone()) {
+        inner.emit(&Event::MessageDone { conv_id: conv_id.into(), message_id: m.id, content: String::new(), meta });
+    }
+    inner.emit(&Event::Note { conv_id: conv_id.into(), text: format!("deferred: {why}; FROST admits no new work until the system recovers. Use Regenerate to retry.") });
+    inner.emit(&Event::MessagesChanged { conv_id: conv_id.into() });
+    true
+}
+
 fn load_generator(inner: &Inner) -> Result<Generator, String> {
     inner.set_status(Status::Loading { detail: "loading Ministral-3-8B-Instruct-2512 (4-bit) on MLX".into() });
     match std::panic::catch_unwind(|| Generator::load(&inner.model_dir)) {
@@ -448,7 +476,13 @@ fn worker(inner: Arc<Inner>, rx: Receiver<Cmd>) {
             Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
         };
         let conv_id = match &cmd { Cmd::Shutdown => break, Cmd::Generate { conv_id } | Cmd::Execute { conv_id, .. } => conv_id.clone() };
-        // The model may have been unloaded (memory pressure or idle): bring it back for this request.
+        // The model may have been unloaded (memory pressure or idle): bring it back for this
+        // request, unless admission would defer it anyway (never reload the 4.5 GiB model
+        // just to immediately turn the request away).
+        if gen.is_none() && matches!(cmd, Cmd::Generate { .. }) && defer_admission(&inner, &conv_id, *inner.mode.lock().unwrap()) {
+            inner.done();
+            continue;
+        }
         if gen.is_none() {
             match load_generator(&inner) {
                 Ok(g) => gen = Some(g),
@@ -621,16 +655,7 @@ fn run_generation(inner: &Inner, gen: &mut Generator, conv_id: &str) {
 
     // Admission: no new uncached neural work while the OS reports Serious/Critical thermal state
     // (or critical memory pressure). Deferred visibly; Regenerate retries once it recovers.
-    let t_now = inner.thermal();
-    let p_now = frost_platform::memory_pressure();
-    if matches!(t_now, ThermalState::Serious | ThermalState::Critical) || p_now == frost_platform::MemoryPressure::Critical {
-        let why = if p_now == frost_platform::MemoryPressure::Critical { "critical memory pressure".to_string() } else { format!("thermal state {t_now:?}") };
-        let meta = json!({"status": "done", "finish": if p_now == frost_platform::MemoryPressure::Critical { "memory_pressure_deferred".to_string() } else { format!("thermal_deferred:{t_now:?}") }, "deferred_before_start": true, "mode": mode_name(mode)});
-        if let Ok(m) = inner.store.lock().unwrap().append_message(conv_id, Role::Assistant, "", meta.clone()) {
-            inner.emit(&Event::MessageDone { conv_id: conv_id.into(), message_id: m.id, content: String::new(), meta });
-        }
-        inner.emit(&Event::Note { conv_id: conv_id.into(), text: format!("deferred: {why}; FROST admits no new work until the system recovers. Use Regenerate to retry.") });
-        inner.emit(&Event::MessagesChanged { conv_id: conv_id.into() });
+    if defer_admission(inner, conv_id, mode) {
         return;
     }
 

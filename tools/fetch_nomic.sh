@@ -20,11 +20,8 @@ printf '%s\n' "$FILES" | while read -r name bytes sha; do
   [ -n "$name" ] || continue
   final="$DEST/$name"; part="$final.part"
   if [ -f "$final" ] && [ "$(stat -f %z "$final")" = "$bytes" ]; then
-    if [ ! -f "$final.sha256" ] || ! grep -q '^[0-9a-f]\{64\}$' "$final.sha256"; then
-      shasum -a 256 "$final" | cut -d' ' -f1 > "$final.sha256"   # normalize legacy "hash  path" markers
-    fi
-    got=$(cat "$final.sha256")
-    if [ "$sha" = "-" ] || [ "$got" = "$sha" ]; then say "ok      $name"; continue; fi
+    got=$(shasum -a 256 "$final" | cut -d' ' -f1)   # always rehash: a cached marker cannot be trusted
+    if [ "$sha" = "-" ] || [ "$got" = "$sha" ]; then printf '%s\n' "$got" > "$final.sha256"; say "ok      $name"; continue; fi
     say "DIGEST MISMATCH $name — refetching"; rm -f "$final" "$final.sha256"
   fi
   say "fetch   $name ($bytes bytes)"

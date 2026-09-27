@@ -29,8 +29,11 @@ const READER_GRACE: Duration = Duration::from_secs(2);
 const SIGKILL: i32 = 9;
 const SIGTERM: i32 = 15;
 
+const WNOHANG: i32 = 1;
+
 extern "C" {
     fn kill(pid: i32, sig: i32) -> i32;
+    fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32;
 }
 
 fn kill_group(pgid: i32, sig: i32) {
@@ -39,6 +42,25 @@ fn kill_group(pgid: i32, sig: i32) {
         // SAFETY: kill(2) takes plain integers and has no memory-safety preconditions.
         unsafe {
             kill(-pgid, sig);
+        }
+    }
+}
+
+/// Reaps already-exited stragglers and reports whether a live one remains, so the
+/// caller only signals a group it can prove is still ours: `waitpid(-pgid, ...)`
+/// only ever matches our own children, so it cannot be confused by a recycled pgid
+/// the way a blind `kill(-pgid, ...)` could.
+fn group_has_live_descendants(pgid: i32) -> bool {
+    if pgid <= 1 {
+        return false;
+    }
+    loop {
+        let mut status: i32 = 0;
+        // SAFETY: waitpid(2) takes plain integers and a valid out-pointer.
+        match unsafe { waitpid(-pgid, &mut status, WNOHANG) } {
+            0 => return true,   // a descendant is still running
+            r if r < 0 => return false, // ECHILD: nothing left in the group
+            _ => {}             // reaped a zombie straggler; keep checking for more
         }
     }
 }
@@ -265,11 +287,12 @@ pub fn run(ws: &Workspace, spec: &RunSpec, cancel: &AtomicBool) -> Result<RunRes
         thread::sleep(POLL);
     };
     // The group must not outlive the command: stragglers (background jobs,
-    // children that ignored SIGTERM) are killed here. ponytail: signalling a
-    // just-reaped leader's pgid is safe while any member lives (the id stays
-    // reserved); if the group is already empty it is ESRCH unless the pid was
-    // recycled within microseconds — acceptable; waitid(WNOWAIT) would close it.
-    kill_group(pgid, SIGKILL);
+    // children that ignored SIGTERM) are killed here. Only signal the group once
+    // waitpid confirms a live member of it still exists, so a leader pid/pgid
+    // reused by an unrelated process in the interval is never signalled.
+    if group_has_live_descendants(pgid) {
+        kill_group(pgid, SIGKILL);
+    }
     let status = match waited {
         Ok(s) => s,
         Err(e) => {

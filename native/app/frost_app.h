@@ -20,8 +20,7 @@ void         frost_engine_set_event_callback(FrostEngine *e, frost_event_cb cb, 
 
 // Status: {"state":"loading"|"ready"|"error","detail"?,"generating":bool,"mode":"quiet"|"balanced"|"performance",
 //          "thermal":"Nominal"|"Fair"|"Serious"|"Critical","memory_pressure":"Normal"|"Warn"|"Critical",
-//          "available_memory_bytes":int|null,"mlx_active_bytes","mlx_peak_bytes","kv_cache_bytes",|"ready"|"error","detail"?,"generating":bool,"mode":"quiet"|"balanced"|"performance",
-//          "thermal":"Nominal"|"Fair"|"Serious"|"Critical","mlx_active_bytes","mlx_peak_bytes","kv_cache_bytes",
+//          "available_memory_bytes":int|null,"mlx_active_bytes":int,"mlx_peak_bytes":int,"kv_cache_bytes":int,
 //          "context_budget":4096,"reserved_output_tokens":1024,"model_loaded":bool,"idle_unload_seconds":600}
 // model_loaded=false with state "ready" means the weights were released (idle or memory pressure) and reload on the next send.
 char *frost_engine_status_json(FrostEngine *e);
