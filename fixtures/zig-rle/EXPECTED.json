@@ -1,0 +1,6 @@
+{
+  "build": ["zig", "ast-check", "rle.zig"],
+  "test": ["zig", "test", "--cache-dir", ".zig-cache", "--global-cache-dir", ".zig-cache/global", "held_out_test.zig"],
+  "held_out": ["held_out_test.zig"],
+  "pass_criteria": "exit 0"
+}

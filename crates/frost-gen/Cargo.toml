@@ -1,0 +1,19 @@
+[package]
+name = "frost-gen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+frost-mlx = { path = "../frost-mlx" }
+frost-tensors = { path = "../frost-tensors" }
+frost-platform = { path = "../frost-platform" }
+frost-index = { path = "../frost-index" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+# HF tokenizers, Rust-native. onig (vendored C, built by cc) matches the reference regex engine
+# used by the upstream Python loader; no network, no hub, no Python.
+frost-kernels = { path = "../frost-kernels" }
+tokenizers = { version = "0.23", default-features = false, features = ["onig"] }

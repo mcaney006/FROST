@@ -1,0 +1,16 @@
+[package]
+name = "frost-repo"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+frost-index = { path = "../frost-index" }
+frost-model = { path = "../frost-model" }
+frost-store = { path = "../frost-store" }
+ignore = "0.4"
+# 0.10 is already in the lockfile (transitively); 0.11 would add a second copy.
+sha2 = "0.10"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }

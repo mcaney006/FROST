@@ -1,108 +1,154 @@
 # FROST
 
-An offline, thermally-aware **state → action decision engine** for Apple Silicon.
-Given a state and a set of allowed candidate actions, FROST ranks the candidates
-with a real, model-backed encoder, returns an inspectable decision (or an
-abstention), and spends extra computation only when justified.
+FROST is a local coding chatbot for Apple silicon Macs. It chats with
+Ministral-3-8B-Instruct-2512 (4-bit, MLX) on the GPU, stores conversations in SQLite, and can
+work on one repository you attach to a conversation: it retrieves relevant excerpts on every turn
+and reads files itself, but every patch and every command it wants to run waits for your
+approval. Nothing is sent over the network after the models are downloaded.
 
-It is **not** a chatbot, an autonomous shell executor, or a claim to beat any
-reasoning model. Action selection here only *ranks* — it never executes shell
-commands, sends messages, or mutates external systems.
+It ships as a native AppKit app (`FROST.app`) and a CLI (`frost`) that share one Rust engine.
 
-## What it actually is
+This README describes the `frost-chat` branch as it is in the tree. Per-feature status lives in
+[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), evidence in [VERIFICATION.md](VERIFICATION.md).
+One thing to know up front: UI automation has driven only the Mode menu and Send; the other menu
+items have NOT been tested by automation.
 
-- A Cargo workspace in **Rust** (engine, scheduling, FFI, CLI, persistence).
-- A **Zig** action-index library (binary-sketch Hamming, INT8 and FP32 dot) with
-  a tested C ABI, linked from Rust and parity-checked against a scalar reference.
-- A **Mojo** numerical kernel (fused L2-normalize + cosine rerank) compiled to a
-  native binary and driven as a persistent coprocessor over bounded IPC.
-- An **MLX** (Apple GPU) backend that runs the full-depth
-  `nomic-embed-text-v1.5` encoder via the `mlx-c` C API from Rust — real
-  downloaded weights, real tokenizer, verified against an independent scalar
-  reference forward.
-- A **Tauri-style desktop app** (`FROST.app`) built on the system webview (wry),
-  whose backend is the exact same engine as the CLI.
+## Requirements
 
-The full-depth pretrained embedding ranker is the **reference/fallback** ranker.
-A separately trained projection head (contrastive, gradient-checked) is included
-and validated but is **not** enabled by default (it did not beat the reference on
-held-out routing). Progressive early-exit heads are **not implemented** — see the
-capability matrix in `IMPLEMENTATION_STATUS.md`.
+| Need | Detail |
+|---|---|
+| Hardware | Apple silicon (bootstrap refuses anything but `arm64`). Developed and measured on a Mac17,2 (Apple M5, 16 GB). |
+| macOS | Bundle declares macOS 15.0 minimum; only macOS 27.2 has been exercised. |
+| Free memory | The loader refuses to start unless available memory (plus MLX's own cache) covers the 4.45 GiB of weights plus 768 MiB headroom. Available memory is the kernel's `kern.memorystatus_level` (the percentage `memory_pressure` prints as "System-wide memory free percentage") times physical memory; if that sysctl fails, free + inactive + purgeable + speculative pages. |
+| Disk | About 6 GB for models (5.6 GB generator, 0.55 GB encoder) plus the build tree. |
+| Toolchain | Command Line Tools (full Xcode not needed), Rust 1.98, Zig 0.16, Homebrew `mlx` 0.32.1 and `mlx-c` 0.6.0. `bootstrap.sh` installs missing Rust/Zig/MLX/mlx-c with Homebrew and stops if Homebrew itself is missing. |
+| Mojo (optional) | The native Mojo compiler at `$FROST_MOJO_BIN`. Without it the sampler uses the Rust reference path and reports `rust-reference`. Bootstrap never installs Python to get Mojo. |
+| Network | Only for the pinned model downloads (`tools/fetch_*.sh`, curl). |
 
-## Install (one command)
+## Install
 
 ```sh
-sh bootstrap.sh
+sh bootstrap.sh              # full run: prerequisites, models, build, tests, stage, install
+sh bootstrap.sh --skip-fetch --skip-tests   # rebuild and reinstall only
+sh bootstrap.sh --launch     # open the app when done
+sh bootstrap.sh --force      # replace an app or CLI link that the manifest does not own
 ```
 
-This is idempotent. It verifies toolchains (Rust, Zig, Mojo, MLX), builds the
-Mojo kernel and the release binaries, downloads the pinned model weights
-(~522 MiB, resumable) if absent, runs bounded tests, assembles and installs
-`~/Applications/FROST.app`, links the CLI at `~/.local/bin/frost`, and verifies.
+The script runs nine steps and logs to `~/Library/Application Support/FROST/logs/`:
 
-Prerequisites (Homebrew): `rust`, `zig`, `mlx`, `mlx-c`, and a Mojo/MAX nightly
-providing `mojo`. Full Xcode is **not** required (MLX ships a precompiled
-metallib; the GPU path works with Command Line Tools only).
+1. Checks prerequisites (installs only what is missing and permitted).
+2. Downloads both models at pinned revisions, resumable, size- and sha256-checked.
+3. `cargo build --release` of `frost-cli` and `frost-desktop` (Zig and Mojo are built by `build.rs`).
+4. Runs the workspace tests, then the model-backed acceptance tests (`--ignored`, serialized,
+   they FAIL when a model is missing), then, if the Mojo compiler is present, the kernel tests
+   with `FROST_REQUIRE_MOJO=1`.
+5. Stages `FROST.app` in a temp dir: the app binary as `Contents/MacOS/FROST`, the CLI as
+   `Contents/Helpers/frost` (APFS is case-insensitive, so `MacOS/frost` would overwrite
+   `MacOS/FROST`); copies `libmlx`, `libmlxc`, `libfrost_kernels.dylib` and four Modular runtime
+   dylibs into `Contents/Frameworks`; puts `mlx.metallib` in `Contents/Resources` with a symlink
+   to it in `Contents/Frameworks` (codesign rejects the metallib under Frameworks); rewrites
+   install names to `@rpath`, strips the venv rpath, signs each dylib and the CLI ad-hoc, then
+   the bundle.
+6. Verifies the staged bundle: no `/opt/homebrew` or `site-packages` references, strict
+   `codesign --verify`, the staged CLI actually loads the bundled `libmlx`, `frost diagnose` passes.
+7. Installs to `~/Applications/FROST.app` with a backup of the previous app and rollback if the
+   installed CLI fails `diagnose`; links `~/.local/bin/frost` to `Contents/Helpers/frost`.
+8. Writes `install-manifest.json` (owned paths, binary digests, toolchain versions).
+9. Runs `frost diagnose --json` and `FROST --headless-check` against the installed copy, and
+   sets the mode to Quiet only if no mode is stored yet (`frost mode quiet --if-unset`).
 
-## Use
+Signing is ad-hoc only: not Developer ID, not notarized, Gatekeeper untouched.
 
-CLI:
+Uninstall: `sh uninstall.sh` removes only the paths listed in the manifest and keeps models,
+the chat database and logs; `sh uninstall.sh --purge` removes all of
+`~/Library/Application Support/FROST`.
+
+## Using the app
+
+The window has a conversation sidebar, a transcript, a composer and an inspector (model identity,
+context budget and last-reply stats, attached repository, notes). While the model loads the
+composer is read-only; if loading fails a banner at the top of the transcript shows the error and
+sending is disabled.
+
+| Menu item | Shortcut |
+|---|---|
+| New Chat / Open Repository… | ⌘N / ⌘O |
+| Send (Return also sends, Shift+Return is a newline) | ⌘↩ |
+| Cancel / Regenerate / Clear Context | ⌘. / ⌘R / ⌘K |
+| Delete Conversation (asks first) | ⌘⌫ |
+| Mode: Quiet, Balanced, Performance | Mode menu |
+| Toggle Sidebar / Toggle Inspector | ⌥⌘S / ⌥⌘I |
+| Wrap Code Blocks, Model Info… | View menu, Model menu |
+
+Code blocks render with a language label and a Copy button, and diffs are coloured. Clear
+Context hides earlier turns from the model without deleting them from the transcript.
+
+Coding work: attach a repository with Open Repository. Before every reply FROST re-checks the
+repository for changed files, re-indexes them with the nomic encoder (paused, with a note, under
+thermal or memory pressure), and prepends the six best excerpts (hybrid vector and keyword
+search) to the model's copy of your message, framed as data. Each reply's meta lists the cited
+path, line range and digest, re-verified against the file after the reply. The model can also
+call `list_files`, `read_file` and `search` (literal substring search), which run at once,
+read-only, inside that directory. `edit_file`, `propose_patch` and `run_command` appear in the
+transcript as review cards with Approve and Deny. An approved patch is re-checked against the
+file hashes it was written for and refused if the file changed; an approved command runs with a minimal environment, a deadline and
+an output cap. Approved commands are NOT sandboxed: a build script runs with your privileges.
+
+## Using the CLI
 
 ```sh
-frost diagnose                 # component + self-test check
-frost models                   # model provenance + fingerprint
-frost rank --state "the user wants to listen to music" \
-  --action "play=start playing a song" \
-  --action "delete=erase all backup files" \
-  --action "brightness=increase screen brightness"
-frost bench --n 20             # encode-latency micro-benchmark
-frost train --epochs 150       # train + validate a projection head (checkpoint)
+frost diagnose [--json] [--load]     # component checks; --load also generates one reply
+frost models                         # generator and encoder identity, no weights loaded
+frost gen --prompt "..." [--max N] [--temp T] [--system TEXT] [--json]
+frost chat [--max N] [--temp T]      # interactive; /reset, /stats, /quit
+frost eval --fixture fixtures/rust-slugify [--out DIR] [--max-rounds N] [--budget-s S]
+frost mode quiet|balanced|performance [--if-unset]
+frost train [--epochs N]             # optional experiment, not used by chat
 ```
 
-Example (`frost rank`, measured on this machine):
+`gen` and `chat` drive the generator directly. `eval` runs a fixture task through the same
+engine and approval loop the app uses, auto-approving every proposal, then judges the result with
+the fixture's build command (if any) followed by its held-out test, and writes `verification/coding_eval/<fixture>.json` (relative to
+the current directory unless `--out` is given).
 
-```
-pick: play
-  1. play         0.6736
-  2. brightness   0.5488
-  3. delete       0.4999
-trace: exit=full width=768 device=gpu cache_hit=false scorer=mojo-ipc
-  encode: ~35 ms (cold)   score: ~0.7 ms
-```
+Only one engine may own a data directory at a time (a `flock` on `frost.lock`). `eval` uses a
+throwaway data directory with the models symlinked in, so it does not take the app's lock, but it
+loads its own model copy, as do `gen`, `chat` and `diagnose --load`. Quit the app first: 16 GB
+does not hold two copies, and the memory admission check will refuse the second load.
 
-Desktop:
+## What runs where
 
-```sh
-open ~/Applications/FROST.app
-```
+| Work | Where |
+|---|---|
+| Transformer forward pass (34 layers, 4-bit matmuls, attention, KV cache) | MLX on the Metal GPU, through mlx-c |
+| Repository retrieval: nomic encoder forward pass | MLX on the Metal GPU |
+| Repository retrieval: exact vector search; BM25-lite and rank fusion | Zig index (SIMD), CPU; Rust, CPU |
+| Top-k and softmax/top-p over the logits | Mojo kernels in `libfrost_kernels.dylib` on the CPU (Rust reference if absent) |
+| Repetition penalty (off by default), greedy argmax, the categorical draw | Rust, CPU |
+| Checkpoint layout validation at load | Zig (`frost_q4_validate`), CPU |
+| Tokenizer, chat template, engine, persistence, tools | Rust, CPU |
+| Window, menus, transcript | AppKit (Objective-C), main thread |
+| Thermal state, memory pressure, free memory | macOS APIs via Objective-C |
 
-## Uninstall
+Generation runs on one background thread; the UI receives coalesced text deltas at most every 40 ms.
 
-```sh
-sh uninstall.sh            # removes only FROST-owned files; keeps models
-sh uninstall.sh --purge    # also removes models + data
-```
+## Limits
 
-## Layout
+- Context: 4096 tokens per request in every mode, of which 1024 are reserved for the reply.
+  Older turns are dropped to fit and a note says so.
+- One generation at a time; a second send while busy is refused, not queued.
+- Measured decode speed is about 25 tokens/s on the M5 (temperature 0.15); Quiet mode is slower
+  on purpose.
+- Serious or Critical thermal state, or Critical memory pressure, when a reply would start
+  finishes it at once with a note. During a reply, Serious or Critical thermal state stops it at
+  the next prefill chunk or token boundary; Critical memory pressure stops it, drops the KV cache
+  and unloads the model until your next message.
+- No OS sandbox for approved commands. No live file watching: the repository is re-stat'ed
+  before each reply instead.
+- Vision input is not supported (the checkpoint's vision tower is never loaded).
 
-```
-crates/frost-core       request/decision types, policies, calibration, cache keys
-crates/frost-index      Rust wrapper over the Zig index + scalar parity
-crates/frost-model      MLX encoder, tokenizer, safetensors, scalar reference
-crates/frost-platform   macOS thermal/power/memory via NSProcessInfo
-crates/frost-service    the shared Engine + persistent Mojo kernel
-crates/frost-train      contrastive head training (gradient-checked)
-crates/frost-cli        the `frost` CLI
-crates/frost-desktop    FROST.app (wry webview) — same engine
-native/index            frost_index.zig (C ABI)
-native/kernels          frost_mojo_helper.mojo (compiled coprocessor)
-```
+## Documents
 
-See `ARCHITECTURE.md`, `MODEL_CARD.md`, `VERIFICATION.md`, `DEPENDENCIES.md`,
-`INVENTION_NOTES.md`, and `IMPLEMENTATION_STATUS.md`.
-
-## License
-
-Dual MIT OR Apache-2.0 for FROST's own code. The model weights and tokenizer are
-`nomic-ai/nomic-embed-text-v1.5` under their upstream license (Apache-2.0);
-see `DEPENDENCIES.md`.
+[ARCHITECTURE.md](ARCHITECTURE.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
+[DEPENDENCIES.md](DEPENDENCIES.md) · [INVENTION_NOTES.md](INVENTION_NOTES.md) ·
+[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) · [VERIFICATION.md](VERIFICATION.md)

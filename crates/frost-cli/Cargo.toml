@@ -11,7 +11,14 @@ path = "src/main.rs"
 [dependencies]
 frost-core = { path = "../frost-core" }
 frost-model = { path = "../frost-model" }
-frost-service = { path = "../frost-service" }
 frost-train = { path = "../frost-train" }
+frost-gen = { path = "../frost-gen" }
+frost-mlx = { path = "../frost-mlx" }
+frost-index = { path = "../frost-index" }
+frost-kernels = { path = "../frost-kernels" }
+frost-platform = { path = "../frost-platform" }
+frost-chat = { path = "../frost-chat" }
+frost-store = { path = "../frost-store" }
+frost-tools = { path = "../frost-tools" }
 serde_json = { workspace = true }
 anyhow = { workspace = true }

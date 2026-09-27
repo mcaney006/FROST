@@ -1,4 +1,0 @@
-encode latency over 20 runs (warm):
-  p50 = 5.7 ms
-  p95 = 6.0 ms
-  min = 5.6 ms  max = 6.2 ms

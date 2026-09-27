@@ -3,16 +3,15 @@ name = "frost-desktop"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+build = "build.rs"
 
 [[bin]]
 name = "frost-desktop"
 path = "src/main.rs"
 
 [dependencies]
-frost-core = { path = "../frost-core" }
-frost-model = { path = "../frost-model" }
-frost-service = { path = "../frost-service" }
-serde = { workspace = true }
+frost-chat = { path = "../frost-chat" }
 serde_json = { workspace = true }
-wry = "0.52"
-tao = "0.35"
+
+[build-dependencies]
+cc = "1"

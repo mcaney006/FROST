@@ -1,7 +1,7 @@
 //! frost-model: real model-backed embeddings for FROST.
 //! Full-depth nomic-embed-text-v1.5 encoder on MLX (GPU), the reference/fallback
 //! ranker per the build contract. Progressive heads layer on top later.
-pub mod mlx;
+pub use frost_mlx as mlx;
 pub mod model;
 pub mod tokenizer;
 pub mod reference;
@@ -67,8 +67,15 @@ impl Embedder {
 }
 
 #[cfg(test)]
-mod tests {
+mod acceptance {
+    //! Mandatory, weight-backed tests: they FAIL when the pinned encoder is missing and are run
+    //! explicitly (`cargo test -p frost-model -- --ignored`) by bootstrap/verification.
     use super::*;
+
+    fn load() -> Embedder {
+        let dir = Embedder::default_dir();
+        Embedder::load(&dir).unwrap_or_else(|e| panic!("REQUIRED encoder missing/invalid at {}: {e:#}", dir.display()))
+    }
 
     fn cos_f32(a: &[f32], b: &[f32]) -> f64 {
         let d: f64 = a.iter().zip(b).map(|(x, y)| *x as f64 * *y as f64).sum();
@@ -78,10 +85,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the pinned nomic weights; run explicitly"]
     fn real_model_behavioral_ranking() {
-        let dir = Embedder::default_dir();
-        if !dir.join("model.safetensors").exists() { eprintln!("SKIP: no weights"); return; }
-        let emb = Embedder::load(&dir).expect("load");
+        let emb = load();
         assert_eq!(emb.dim(), 768);
         eprintln!("fingerprint = {}", emb.fingerprint());
         // determinism + normalization
@@ -100,11 +106,11 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires the pinned nomic weights; run explicitly"]
     fn mlx_matches_scalar_reference() {
         // Independent scalar (f64 CPU) reference vs MLX (GPU) forward — parity.
+        let emb = load();
         let dir = Embedder::default_dir();
-        if !dir.join("model.safetensors").exists() { return; }
-        let emb = Embedder::load(&dir).unwrap();
         let r = reference::Ref::load(&dir).unwrap();
         let ids = emb.tok.encode("search_document: a dog is a domesticated canine", 64);
         let mlx = model::l2_normalize(emb.model.forward(&ids));
@@ -112,5 +118,11 @@ mod tests {
         let c = cos_f32(&mlx, &scal);
         eprintln!("scalar/MLX parity cos = {c:.6}");
         assert!(c > 0.9999, "MLX must match scalar reference: cos={c}");
+        // partial-forward parity: the full-depth partial path is the ordinary forward
+        let full = emb.model.forward(&ids);
+        let upto = emb.model.forward_upto(&ids, emb.model.cfg.layers);
+        assert_eq!(full, upto, "forward_upto(all layers) must equal forward");
+        let half = model::l2_normalize(emb.model.forward_upto(&ids, emb.model.cfg.layers / 2));
+        assert!(cos_f32(&half, &mlx) < 0.9999, "half-depth output must differ from full depth");
     }
 }

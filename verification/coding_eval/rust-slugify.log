@@ -1,0 +1,8 @@
+[eval] fixture rust-slugify: work dir /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T/frost-eval-rust-slugify-1790489610139806000/repo
+[eval] auto-approving propose_diff (Fix the logic for handling non-alphanumeric characters and ensure separators are only added where needed.)
+[eval] auto-approving run_command (Build the project to check for compilation errors.)
+[eval] auto-approving run_command (Run the held_out tests to verify the fix.)
+[eval] auto-approving propose_diff (Fix the logic for handling non-alphanumeric characters and ensure correct trimming of leading/trailing hyphens.)
+[eval] auto-approving run_command (Run the held_out tests to verify the fix.)
+rust-slugify: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 3 | 202s | report verification/coding_eval/rust-slugify.json
+exit=0

@@ -1,0 +1,8 @@
+[eval] fixture c-parse-kv: work dir /var/folders/51/yqbbfcrs76q964r3l2bdrtxr0000gp/T/frost-eval-c-parse-kv-1790515384409841000/repo
+[eval] auto-approving propose_diff (Reject values longer than 64 characters (KV_VALUE_MAX) to prevent heap-buffer-overflow in kv_parse_line.)
+[eval] auto-approving run_command (Build the project with sanitizer checks enabled.)
+[eval] auto-approving run_command (Run the sanitizer-enabled test to verify the fix.)
+[eval] auto-approving propose_diff (Ensure null-termination for out->value to prevent heap-buffer-overflow.)
+[eval] auto-approving run_command (Run the project's test suite to verify the fix.)
+c-parse-kv: plumbing PASS | held-out FAIL (not solved) | patches applied 2 | commands 3 | 122s | report verification/coding_eval/c-parse-kv.json
+exit=0

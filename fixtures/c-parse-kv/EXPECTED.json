@@ -1,0 +1,6 @@
+{
+  "build": ["clang", "-fsanitize=address,undefined", "-Wall", "-Werror", "kv.c", "held_out_test_kv.c", "-o", "held_out_test_kv"],
+  "test": ["./held_out_test_kv"],
+  "held_out": ["held_out_test_kv.c"],
+  "pass_criteria": "exit 0"
+}
