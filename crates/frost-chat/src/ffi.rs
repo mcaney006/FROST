@@ -82,6 +82,7 @@ pub extern "C" fn frost_engine_set_event_callback(h: *mut FrostEngine, cb: Frost
     };
     let ctx = CbCtx(ctx);
     let _ = status_of(h, |e| {
+        e.clear_subscribers();
         e.subscribe(Box::new(move |ev: &Event| {
             if let Ok(js) = serde_json::to_string(ev) {
                 if let Ok(c) = CString::new(js) { cb(ctx.ptr(), c.as_ptr()); }

@@ -269,8 +269,13 @@ impl Engine {
             a
         };
         if approve {
+            let queued = self.enqueue(Cmd::Execute { conv_id: conv_id.into(), attempt_id: attempt_id.into() });
+            if let Err(err) = queued {
+                self.0.store.lock().unwrap().set_attempt_status(attempt_id, AttemptStatus::Proposed)?;
+                return Err(err);
+            }
             self.0.emit(&Event::AttemptUpdated { conv_id: conv_id.into(), attempt: attempt_json(&attempt, AttemptStatus::Approved) });
-            return self.enqueue(Cmd::Execute { conv_id: conv_id.into(), attempt_id: attempt_id.into() });
+            return Ok(());
         }
         let result = json!({"denied": true, "kind": attempt.kind.as_str(), "note": "the user declined this action; do not retry it unchanged"}).to_string();
         self.0.store.lock().unwrap().append_message(conv_id, Role::Tool, &result, json!({"attempt_id": attempt_id, "tool": attempt.kind.as_str()}))?;
@@ -509,6 +514,29 @@ fn to_gen_messages(msgs: &[Message]) -> Vec<frost_gen::Message> {
     }).collect()
 }
 
+fn drop_oldest_history_unit(history: &mut Vec<frost_gen::Message>) -> usize {
+    if history.len() <= 1 { return 0; }
+    if history.first().map(|m| m.role) != Some(frost_gen::Role::User) {
+        if let Some(first_user) = history.iter().position(|m| m.role == frost_gen::Role::User) {
+            if first_user > 0 {
+                history.drain(0..first_user);
+                return first_user;
+            }
+        }
+        return 0;
+    }
+    if let Some(next_user) = history.iter().enumerate().skip(1).find_map(|(i, m)| (m.role == frost_gen::Role::User).then_some(i)) {
+        history.drain(0..next_user);
+        return next_user;
+    }
+    let Some(first_assistant) = history.iter().enumerate().skip(1).find_map(|(i, m)| (m.role == frost_gen::Role::Assistant).then_some(i)) else { return 0; };
+    let mut end = first_assistant + 1;
+    while end < history.len() && history[end].role == frost_gen::Role::Tool { end += 1; }
+    let removed = end - first_assistant;
+    history.drain(first_assistant..end);
+    removed
+}
+
 /// Run an approved attempt on the worker, persist the outcome, feed it back as a tool turn.
 /// Returns true when the model should now continue (a generation follows).
 fn run_execute(inner: &Inner, conv_id: &str, attempt_id: &str) -> bool {
@@ -580,8 +608,12 @@ fn run_generation(inner: &Inner, gen: &mut Generator, conv_id: &str) {
             inner.emit(&Event::Error { conv_id: Some(conv_id.into()), detail: format!("message too long: {} tokens; at most {limit} fit in the model's context", ids.len()) });
             return;
         }
-        history.remove(0);
-        dropped += 1;
+        let removed = drop_oldest_history_unit(&mut history);
+        if removed == 0 {
+            inner.emit(&Event::Error { conv_id: Some(conv_id.into()), detail: format!("message too long: {} tokens; at most {limit} fit in the model's context", ids.len()) });
+            return;
+        }
+        dropped += removed;
     };
     if dropped > 0 {
         inner.emit(&Event::Note { conv_id: conv_id.into(), text: format!("context truncated: the {dropped} oldest message(s) were left out of the model's context (still in the transcript)") });
@@ -763,6 +795,22 @@ mod tests {
         let msgs = vec![mk(Role::User, 1), mk(Role::Assistant, 2), mk(Role::System, 3), mk(Role::User, 4)];
         assert_eq!(context_slice(&msgs).len(), 1);
         assert_eq!(to_gen_messages(&msgs).len(), 3);
+    }
+
+    #[test]
+    fn context_truncation_drops_whole_turns_and_tool_rounds() {
+        let call = ToolCall { name: "read_file".into(), arguments: "{}".into() };
+        let mut history = vec![
+            frost_gen::Message::user("old"),
+            frost_gen::Message::assistant("old answer"),
+            frost_gen::Message::user("new"),
+            frost_gen::Message::assistant("").with_tool_calls(vec![call]),
+            frost_gen::Message::tool("result"),
+        ];
+        assert_eq!(drop_oldest_history_unit(&mut history), 2);
+        assert_eq!(history.iter().map(|m| m.role).collect::<Vec<_>>(), vec![frost_gen::Role::User, frost_gen::Role::Assistant, frost_gen::Role::Tool]);
+        assert_eq!(drop_oldest_history_unit(&mut history), 2);
+        assert_eq!(history.iter().map(|m| m.role).collect::<Vec<_>>(), vec![frost_gen::Role::User]);
     }
 
     #[test]

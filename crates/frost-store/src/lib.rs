@@ -391,7 +391,14 @@ impl Store {
     }
 
     /// Deletes every message with `seq > seq` (edit/regenerate branching). Returns the count.
+    /// Attempts proposed by deleted assistant messages are removed with those messages.
     pub fn truncate_after(&self, conversation_id: &str, seq: i64) -> Result<usize> {
+        self.conn.execute(
+            "DELETE FROM attempts
+             WHERE conversation_id = ?1
+               AND message_id IN (SELECT id FROM messages WHERE conversation_id = ?1 AND seq > ?2)",
+            params![conversation_id, seq],
+        )?;
         Ok(self
             .conn
             .execute("DELETE FROM messages WHERE conversation_id = ?1 AND seq > ?2", params![conversation_id, seq])?)
@@ -927,12 +934,18 @@ mod tests {
         let mut s = store();
         let c = s.create_conversation("t", "chat", "").unwrap();
         let roles = [Role::System, Role::User, Role::Assistant, Role::User, Role::Assistant];
+        let mut msgs = Vec::new();
         for (i, role) in roles.into_iter().enumerate() {
-            assert_eq!(s.append_message(&c.id, role, &i.to_string(), json!({})).unwrap().seq, i as i64 + 1);
+            let msg = s.append_message(&c.id, role, &i.to_string(), json!({})).unwrap();
+            assert_eq!(msg.seq, i as i64 + 1);
+            msgs.push(msg);
         }
+        let kept = s.insert_attempt(&c.id, Some(&msgs[2].id), AttemptKind::ProposeDiff, json!({"diff": "kept"})).unwrap();
+        s.insert_attempt(&c.id, Some(&msgs[4].id), AttemptKind::RunCommand, json!({"cmd": "dropped"})).unwrap();
         assert_eq!(s.truncate_after(&c.id, 3).unwrap(), 2);
         let seqs: Vec<i64> = s.list_messages(&c.id).unwrap().iter().map(|m| m.seq).collect();
         assert_eq!(seqs, [1, 2, 3]);
+        assert_eq!(s.list_attempts(&c.id).unwrap(), vec![kept]);
         assert_eq!(s.append_message(&c.id, Role::User, "edited", json!({})).unwrap().seq, 4);
         assert_eq!(s.last_message(&c.id).unwrap().unwrap().content, "edited");
     }
